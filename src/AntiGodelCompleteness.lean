@@ -2,160 +2,279 @@
 Copyright (c) 2026 Eduardo Nava-Hernandez. All rights reserved.
 Released under the NRS Noncommercial License 1.0.0 as described in the file LICENSE.
 Authors: Eduardo Nava-Hernandez, José Arturo Nava-Hernández
+-/
+module
 
-# AntiGodelCompleteness.lean — Théorème Canonique de Complétude Mathématique Constructive
-### Réfutation de l'Incomplétude de Gödel par les Fondements Robertson–Fiedler–Niven–Gabor–Szegő
+public import AntiGodelCompleteness.Monotonicity
 
-Axiome Maître de Déduction Constructive :
-« Il n'y a pas un seul gramme de physique dans cette construction : toute physique en est la conséquence.
-  Depuis les mathématiques pures, l'autoréférence infinie de Gödel s'effondre :
-  1. Niven : π > 3 est une vérité géométrique absolue et immuable.
-  2. Szegő : De π > 3 découle la positivité stricte de la borne limite C_M^∞ = π²/3 - 3 > 0.
-  3. Robertson : L'inégalité de Gram interdit que le commutateur [H, X] ≠ 0 s'annule en d = 4 : C_M(4) > 0.
-  4. Gabor : La résolution dans l'espace des phases possède un quantum minimal d'incertitude analytique.
-  5. Fiedler : La connectivité spectrale de tout graphe déductif possède un trou spectral non nul.
-  
-  Par conséquent, aucun système formel réalisable ne peut exécuter une infinité d'étapes autoréférentielles
-  à coût analytique nul. L'incomplétude de Gödel n'est que l'artifice d'une hypothèse de calcul infini
-  sans borne géométrique ; dans le canon des opérateurs autoadjoints, les mathématiques sont complètes,
-  consistantes et causalement décidables. »
+/-!
+# The closed chain: the squared mass band
 
-Certifié par le noyau Lean 4 avec 0 sorry sous les seuls axiomes standards [propext, Classical.choice, Quot.sound].
+`massSq d = C_N(d)² − 1`, with `C_N(d)` in closed form in `θ_d = π/(d+1)`
+(`AntiGodelCompleteness.Szego`, copied from `D8_Szego.lean`). The chain closes on `π`:
+`π` enters through `θ_d` and returns as the Szegő limit `π²/3 − 3`.
+
+1. **Saturation** at `d = 2, 3`: `massSq 2 = massSq 3 = 0`.
+2. **Floor** at `d = 4`: `massSq 4 = (94 − 42√5)/5 > 0`.
+3. **Band** for `d ≥ 4`: `0 < massSq 4 ≤ massSq d < π²/3 − 3` (monotonicity from
+   `AntiGodelCompleteness.Monotonicity`, copied from `D9_Monotonicity.lean`).
+4. **Limit**: `massSq d → π²/3 − 3`, a limit that no `d` reaches; `π²/3 − 3 > 0`
+   since `π > 3`.
+
+5. **The formal system** `Sentence` of the chain (atoms on `C_M(d)`, `¬`, `∧`, `∨`, and
+   `∀ d ≥ k`) is decidable, complete and consistent: `Holds φ ↔ eval φ = true`, where `eval`
+   compares natural numbers only.
+
+Every statement imports Mathlib only.
+
+## Main results
+
+- `Gnomon.massSq_band` : `0 < massSq 4 ≤ massSq d < π²/3 − 3` for `d ≥ 4`.
+- `Gnomon.tendsto_massSq` : `massSq d → π²/3 − 3`.
+- `Gnomon.closedChain` : saturation, floor, band and limit together.
+- `Gnomon.Sentence.holds_iff_eval` : every sentence is decided by `eval`.
+- `Gnomon.Sentence.complete`, `Gnomon.Sentence.consistent` : `φ` or `¬φ` holds, never both.
+- `Gnomon.closedSystem` : the closed chain and its decidable, complete, consistent system.
 -/
 
-import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
-import Mathlib.Analysis.Real.Pi.Bounds
-import Mathlib.Analysis.SpecialFunctions.Pow.Real
+@[expose] public noncomputable section
 
-namespace AntiGodelCompleteness
+open Real Filter
+open scoped Topology
 
-open Real
+namespace Gnomon
 
-/-! ## 1. Théorème de Niven et Géométrie Transcendante : π > 3 -/
+/-- The squared mass `massSq d = C_M(d) = C_N(d)² − 1`. -/
+def massSq (d : ℕ) : ℝ := CoherenceConstantSq d - 1
 
-/-- Théorème Fondamental de Géométrie Transcendante (Niven) :
-    Le rapport périmétrique euclidien π est strictement supérieur à l'approximation hexagonale 3. -/
-theorem niven_pi_strictly_greater_than_three : 3 < Real.pi :=
-  Real.pi_gt_three
+/-- The Szegő limit of the squared mass, `π²/3 − 3 = (C_N^∞)² − 1`. -/
+def massSqInf : ℝ := π ^ 2 / 3 - 3
 
-/-- Le carré de π est strictement supérieur à 9 -/
-theorem pi_sq_gt_nine : 9 < Real.pi ^ 2 := by
-  have hpi : 3 < Real.pi := Real.pi_gt_three
-  nlinarith
+theorem massSqInf_pos : 0 < massSqInf := by
+  unfold massSqInf
+  nlinarith [Real.pi_gt_three]
 
-/-! ## 2. Théorème de Szegő : La Borne Asymptotique Universelle est Strictement Positive -/
+theorem massSqInf_eq_sq : massSqInf = CoherenceConstantInf ^ 2 - 1 := by
+  unfold massSqInf CoherenceConstantInf
+  rw [Real.sq_sqrt (by nlinarith [Real.pi_gt_three])]
+  ring
 
-/-- La constante analytique universelle de Szegő pour les formes de Toeplitz : C_M^∞ = π² / 3 - 3 -/
-noncomputable def szegoBound : ℝ := Real.pi ^ 2 / 3 - 3
+theorem massSq_two : massSq 2 = 0 := by
+  simp [massSq, CoherenceConstantSq_two]
 
-/-- **THÉORÈME ANALYTIQUE DE SZEGŐ** :
-    Comme π > 3, la borne universelle de cohérence de Szegő est STRICTEMENT POSITIVE.
-    C'est une vérité inébranlable de l'analyse harmonique : cette borne ne s'annule jamais. -/
-theorem szego_bound_strictly_positive : 0 < szegoBound := by
-  unfold szegoBound
-  have h9 : 9 < Real.pi ^ 2 := pi_sq_gt_nine
+theorem massSq_three : massSq 3 = 0 := by
+  simp [massSq, CoherenceConstantSq_three]
+
+theorem massSq_four_eq : massSq 4 = (94 - 42 * √5) / 5 := by
+  rw [massSq, CoherenceConstantSq_four_eq]
+  ring
+
+theorem massSq_four_pos : 0 < massSq 4 := by
+  unfold massSq
+  linarith [one_lt_CoherenceConstantSq_four]
+
+/-- **The squared mass band.** For `d ≥ 4`, `0 < massSq 4 ≤ massSq d < π²/3 − 3`. -/
+theorem massSq_band (d : ℕ) (hd : 4 ≤ d) :
+    0 < massSq 4 ∧ massSq 4 ≤ massSq d ∧ massSq d < massSqInf := by
+  refine ⟨massSq_four_pos, ?_, ?_⟩
+  · unfold massSq
+    have := CoherenceConstantSq_strictMonoOn_ge_four.monotoneOn (by simp) (by simpa using hd) hd
+    linarith
+  · have h1 := CoherenceConstant_lt_CoherenceConstantInf d hd
+    have h0 : 0 ≤ CoherenceConstant d := Real.sqrt_nonneg _
+    have h2 : CoherenceConstant d ^ 2 < CoherenceConstantInf ^ 2 := by nlinarith
+    have hsq : CoherenceConstantSq d = CoherenceConstant d ^ 2 := by
+      unfold CoherenceConstant
+      rw [Real.sq_sqrt]
+      linarith [one_lt_CoherenceConstantSq d hd]
+    rw [massSqInf_eq_sq, massSq, hsq]
+    linarith
+
+/-- **The Szegő limit of the squared mass.** `massSq d → π²/3 − 3`. -/
+theorem tendsto_massSq : Tendsto massSq atTop (𝓝 massSqInf) := by
+  have h := tendsto_CoherenceConstantSq.sub_const 1
+  have he : π ^ 2 / 3 - 2 - 1 = massSqInf := by unfold massSqInf; ring
+  rw [he] at h
+  exact h
+
+/-- **The closed chain.** Saturation at `d = 2, 3`, the floor at `d = 4`, the band for
+every `d ≥ 4`, and the Szegő limit `π²/3 − 3 > 0`. -/
+theorem closedChain :
+    (massSq 2 = 0 ∧ massSq 3 = 0) ∧
+    massSq 4 = (94 - 42 * √5) / 5 ∧
+    (∀ d, 4 ≤ d → 0 < massSq 4 ∧ massSq 4 ≤ massSq d ∧ massSq d < massSqInf) ∧
+    (0 < massSqInf ∧ Tendsto massSq atTop (𝓝 massSqInf)) :=
+  ⟨⟨massSq_two, massSq_three⟩, massSq_four_eq, massSq_band,
+    ⟨massSqInf_pos, tendsto_massSq⟩⟩
+
+/-! ## The four facts every sentence reduces to -/
+
+theorem massSq_eq_zero_of_le_one {n : ℕ} (hn : n ≤ 1) : massSq (n + 2) = 0 := by
+  interval_cases n
+  · exact massSq_two
+  · exact massSq_three
+
+theorem massSq_pos_of_two_le {n : ℕ} (hn : 2 ≤ n) : 0 < massSq (n + 2) := by
+  obtain ⟨h0, h1, -⟩ := massSq_band (n + 2) (by omega)
   linarith
 
-/-! ## 3. Constante Canonique de Masse de Szegő en 4D : C_M(4) > 0 -/
-
-/-- Constante de Masse Canonique évaluée en d = 4 selon la formule fermée de Sturm-Liouville :
-    C_M(4) = (94 - 42 * √5) / 5 ≈ 0.017029 -/
-noncomputable def C_M_four : ℝ := (94 - 42 * Real.sqrt 5) / 5
-
-/-- Positivité stricte de la constante de masse en dimension 4 -/
-theorem C_M_four_pos : 0 < C_M_four := by
-  unfold C_M_four
-  have h5 : Real.sqrt 5 < 2.237 := by
-    rw [Real.sqrt_lt'] <;> norm_num
+theorem massSq_lt_of_lt {m n : ℕ} (hm : 2 ≤ m) (hmn : m < n) :
+    massSq (m + 2) < massSq (n + 2) := by
+  unfold massSq
+  have := CoherenceConstantSq_strictMonoOn_ge_four (a := m + 2) (b := n + 2)
+    (show 4 ≤ m + 2 by omega) (show 4 ≤ n + 2 by omega) (by omega)
   linarith
 
-/-- C_M(4) est strictement majorée par la borne de Szegő engendrée par π > 3 -/
-theorem C_M_four_bounded_by_szego : C_M_four < szegoBound := by
-  unfold C_M_four szegoBound
-  have h5 : 2.236 ≤ Real.sqrt 5 := by
-    rw [Real.le_sqrt'] <;> norm_num
-  have hpi : 3.1415 < Real.pi := Real.pi_gt_d4
-  nlinarith
+theorem massSq_lt_massSqInf (n : ℕ) : massSq (n + 2) < massSqInf := by
+  rcases le_or_gt n 1 with hn | hn
+  · rw [massSq_eq_zero_of_le_one hn]
+    exact massSqInf_pos
+  · exact (massSq_band (n + 2) (by omega)).2.2
 
-/-! ## 4. Limite de Gabor et Mandelstam–Tamm : Quantum Temporel d'Inférence Logique -/
+/-! ## The formal system of the closed chain
 
-/-- Quantum analytique minimal de résolution dans l'espace des phases (Limite de Gabor / Mandelstam–Tamm) :
-    L'intervalle de temps propre minimal tau_infer requis pour transiter entre deux états logiques
-    distinguables sous une échelle d'énergie E > 0 et une constante quantique ħ > 0. -/
-noncomputable def inferenceStepQuantum (ħ E : ℝ) : ℝ := Real.pi * ħ / (2 * E)
+`Sentence` is the language of the chain: atomic sentences about `C_M(d)` at the dimension
+`d = n + 2`, closed under `¬`, `∧`, `∨`, together with the universal sentence
+`gapFrom k : ∀ n ≥ k, 0 < C_M(n + 2)`. `Holds` is its meaning in `ℝ`; `eval` is an
+algorithm on `ℕ` only. -/
 
-/-- Le quantum de temps d'inférence est strictement non nul et positif pour tout système réel -/
-theorem inference_step_quantum_pos (ħ E : ℝ) (hħ : 0 < ħ) (hE : 0 < E) :
-    0 < inferenceStepQuantum ħ E := by
-  unfold inferenceStepQuantum
-  have hpi : 0 < Real.pi := Real.pi_pos
-  have hnum : 0 < Real.pi * ħ := mul_pos hpi hħ
-  have hden : 0 < 2 * E := by linarith
-  exact div_pos hnum hden
+/-- The sentences of the closed chain. -/
+inductive Sentence where
+  /-- `C_M(n + 2) = 0`. -/
+  | saturates (n : ℕ)
+  /-- `0 < C_M(n + 2)`. -/
+  | gap (n : ℕ)
+  /-- `C_M(4) ≤ C_M(n + 2) < π²/3 − 3`. -/
+  | band (n : ℕ)
+  /-- `C_M(n + 2) < π²/3 − 3`. -/
+  | belowLimit (n : ℕ)
+  /-- `C_M(m + 2) < C_M(n + 2)`. -/
+  | lt (m n : ℕ)
+  /-- `∀ n ≥ k, 0 < C_M(n + 2)`. -/
+  | gapFrom (k : ℕ)
+  | neg (φ : Sentence)
+  | conj (φ ψ : Sentence)
+  | disj (φ ψ : Sentence)
 
-/-- Capacité déductive maximale de tout système formel sur un horizon temporel propre tau -/
-noncomputable def maxDeductiveSteps (E τ ħ : ℝ) : ℝ := 2 * E * τ / (Real.pi * ħ)
+namespace Sentence
 
-/-- La capacité déductive est strictement finie et positive pour toute ressource finie -/
-theorem max_deductive_steps_finite (E τ ħ : ℝ) (hE : 0 < E) (hτ : 0 < τ) (hħ : 0 < ħ) :
-    0 < maxDeductiveSteps E τ ħ := by
-  unfold maxDeductiveSteps
-  have hnum : 0 < 2 * E * τ := by positivity
-  have hpi : 0 < Real.pi := Real.pi_pos
-  have hden : 0 < Real.pi * ħ := mul_pos hpi hħ
-  exact div_pos hnum hden
+/-- The meaning of a sentence, a statement about real numbers. -/
+def Holds : Sentence → Prop
+  | saturates n => massSq (n + 2) = 0
+  | gap n => 0 < massSq (n + 2)
+  | band n => massSq 4 ≤ massSq (n + 2) ∧ massSq (n + 2) < massSqInf
+  | belowLimit n => massSq (n + 2) < massSqInf
+  | lt m n => massSq (m + 2) < massSq (n + 2)
+  | gapFrom k => ∀ n, k ≤ n → 0 < massSq (n + 2)
+  | neg φ => ¬ φ.Holds
+  | conj φ ψ => φ.Holds ∧ ψ.Holds
+  | disj φ ψ => φ.Holds ∨ ψ.Holds
 
-/-! ## 5. Structure d'un Démonstrateur Mathématique Réalisable -/
+/-- The decision procedure: comparisons of natural numbers only. -/
+def eval : Sentence → Bool
+  | saturates n => decide (n ≤ 1)
+  | gap n => decide (2 ≤ n)
+  | band n => decide (2 ≤ n)
+  | belowLimit _ => true
+  | lt m n => decide (2 ≤ n ∧ m < n)
+  | gapFrom k => decide (2 ≤ k)
+  | neg φ => !φ.eval
+  | conj φ ψ => φ.eval && ψ.eval
+  | disj φ ψ => φ.eval || ψ.eval
 
-/-- Structure canonique d'un système démonstrateur sur support physique réel -/
-structure MathematicalProver where
-  resourceScale : ℝ
-  properTimeHorizon : ℝ
-  quantumScale : ℝ
-  h_resource : 0 < resourceScale
-  h_time : 0 < properTimeHorizon
-  h_quantum : 0 < quantumScale
+theorem holds_saturates_iff (n : ℕ) : (saturates n).Holds ↔ n ≤ 1 := by
+  refine ⟨fun h => ?_, fun h => massSq_eq_zero_of_le_one h⟩
+  by_contra hn
+  exact (massSq_pos_of_two_le (by omega)).ne' h
 
-/-- Capacité totale d'inférence du système démonstrateur -/
-noncomputable def MathematicalProver.totalStepCapacity (prover : MathematicalProver) : ℝ :=
-  maxDeductiveSteps prover.resourceScale prover.properTimeHorizon prover.quantumScale
+theorem holds_gap_iff (n : ℕ) : (gap n).Holds ↔ 2 ≤ n := by
+  refine ⟨fun h => ?_, massSq_pos_of_two_le⟩
+  by_contra hn
+  have h0 := massSq_eq_zero_of_le_one (n := n) (by omega)
+  simp only [Holds, h0, lt_self_iff_false] at h
 
-theorem MathematicalProver.totalStepCapacity_pos (prover : MathematicalProver) :
-    0 < prover.totalStepCapacity :=
-  max_deductive_steps_finite prover.resourceScale prover.properTimeHorizon prover.quantumScale
-    prover.h_resource prover.h_time prover.h_quantum
+theorem holds_band_iff (n : ℕ) : (band n).Holds ↔ 2 ≤ n := by
+  refine ⟨fun h => ?_, fun h => ?_⟩
+  · by_contra hn
+    have h0 := massSq_eq_zero_of_le_one (n := n) (by omega)
+    have h4 := massSq_four_pos
+    simp only [Holds, h0] at h
+    linarith [h.1]
+  · exact ⟨(massSq_band (n + 2) (by omega)).2.1, massSq_lt_massSqInf n⟩
 
-/-! ## 6. Le Théorème Maître Anti-Gödel de Complétude Constructive -/
+theorem holds_belowLimit (n : ℕ) : (belowLimit n).Holds := massSq_lt_massSqInf n
 
-/-- **THÉORÈME MAÎTRE ANTI-GÖDEL DE COMPLÉTUDE CONSTRUCTIVE** :
-    Établi sous l'enchaînement analytique de Robertson, Fiedler, Niven, Gabor et Szegő :
-    (1) π > 3 impose que la borne de Szegő szegoBound = π²/3 - 3 soit strictement positive.
-    (2) En dimension 4, la constante de masse analytique C_M(4) est strictement positive et bornée par Szegő.
-    (3) Le quantum d'inférence analytique inferenceStepQuantum est strictement non nul.
-    (4) La capacité totale de déduction de tout démonstrateur réalisable est strictement finie.
-    
-    Conséquence mathématique inéluctable :
-    L'argument d'incomplétude de Gödel exige un oracle exécutant une chaîne autoréférentielle infinie
-    à coût analytique nul. Dès lors que toute étape déductive exige un quantum fini non nul
-    tau_infer > 0 borné par Szegő (π > 3), la boucle infinie non décidable est formellement exclue.
-    Toute proposition admissible dans l'horizon d'inférence de l'univers est finie,
-    consistante et constructivement décidable. -/
-theorem AntiGodel_Completeness_Master_Theorem
-    (prover : MathematicalProver) :
-    -- 1. Théorème de Niven et Borne de Szegő : π > 3 ⟹ szegoBound > 0
-    (3 < Real.pi ∧ 0 < szegoBound) ∧
-    -- 2. Constante Canonique en 4D : 0 < C_M(4) < szegoBound
-    (0 < C_M_four ∧ C_M_four < szegoBound) ∧
-    -- 3. Quantum d'inférence analytique strictement positif
-    (0 < inferenceStepQuantum prover.quantumScale prover.resourceScale) ∧
-    -- 4. Capacité déductive finie : clôture de la complétude constructive
-    (0 < prover.totalStepCapacity) := by
-  refine ⟨⟨niven_pi_strictly_greater_than_three, szego_bound_strictly_positive⟩, ?_⟩
-  refine ⟨⟨C_M_four_pos, C_M_four_bounded_by_szego⟩, ?_⟩
-  refine ⟨inference_step_quantum_pos prover.quantumScale prover.resourceScale
-    prover.h_quantum prover.h_resource, ?_⟩
-  exact prover.totalStepCapacity_pos
+theorem holds_lt_iff (m n : ℕ) : (lt m n).Holds ↔ 2 ≤ n ∧ m < n := by
+  simp only [Holds]
+  rcases le_or_gt m 1 with hm | hm <;> rcases le_or_gt n 1 with hn | hn
+  · rw [massSq_eq_zero_of_le_one hm, massSq_eq_zero_of_le_one hn]
+    simp only [lt_self_iff_false, false_iff, not_and, not_lt]
+    omega
+  · rw [massSq_eq_zero_of_le_one hm]
+    simp only [massSq_pos_of_two_le hn, true_iff]
+    omega
+  · rw [massSq_eq_zero_of_le_one hn]
+    simp only [not_lt.mpr (massSq_pos_of_two_le hm).le, false_iff, not_and, not_lt]
+    omega
+  · constructor
+    · intro h
+      refine ⟨hn, ?_⟩
+      by_contra hmn
+      rcases (not_lt.mp hmn).lt_or_eq with hlt | heq
+      · exact lt_asymm h (massSq_lt_of_lt hn hlt)
+      · subst heq
+        exact lt_irrefl _ h
+    · exact fun h => massSq_lt_of_lt hm h.2
 
-#print axioms AntiGodel_Completeness_Master_Theorem
+theorem holds_gapFrom_iff (k : ℕ) : (gapFrom k).Holds ↔ 2 ≤ k := by
+  refine ⟨fun h => (holds_gap_iff k).mp (h k le_rfl), fun hk n hn => ?_⟩
+  exact massSq_pos_of_two_le (by omega)
 
-end AntiGodelCompleteness
+/-- **Every sentence is decided by the algorithm.** -/
+theorem holds_iff_eval : ∀ φ : Sentence, φ.Holds ↔ φ.eval = true
+  | saturates n => by simp [eval, holds_saturates_iff]
+  | gap n => by simp [eval, holds_gap_iff]
+  | band n => by simp [eval, holds_band_iff]
+  | belowLimit n => by simp [eval, holds_belowLimit]
+  | lt m n => by simp [eval, holds_lt_iff]
+  | gapFrom k => by simp [eval, holds_gapFrom_iff]
+  | neg φ => by simp [Holds, eval, holds_iff_eval φ]
+  | conj φ ψ => by simp [Holds, eval, holds_iff_eval φ, holds_iff_eval ψ]
+  | disj φ ψ => by simp [Holds, eval, holds_iff_eval φ, holds_iff_eval ψ]
+
+/-- **Decidability.** The truth of every sentence is computable. -/
+instance : DecidablePred Holds := fun φ => decidable_of_iff _ (holds_iff_eval φ).symm
+
+/-- **Completeness.** Every sentence holds or its negation holds. -/
+theorem complete (φ : Sentence) : φ.Holds ∨ φ.neg.Holds := by
+  cases h : φ.eval
+  · right
+    simp [Holds, holds_iff_eval φ, h]
+  · left
+    exact (holds_iff_eval φ).mpr h
+
+/-- **Consistency.** No sentence holds together with its negation. -/
+theorem consistent (φ : Sentence) : ¬ (φ.Holds ∧ φ.neg.Holds) :=
+  fun h => h.2 h.1
+
+end Sentence
+
+/-- **The closed system.** The closed chain, and its formal system: every sentence is
+decided by `eval`, is complete and is consistent. -/
+theorem closedSystem :
+    ((massSq 2 = 0 ∧ massSq 3 = 0) ∧
+      massSq 4 = (94 - 42 * √5) / 5 ∧
+      (∀ d, 4 ≤ d → 0 < massSq 4 ∧ massSq 4 ≤ massSq d ∧ massSq d < massSqInf) ∧
+      (0 < massSqInf ∧ Tendsto massSq atTop (𝓝 massSqInf))) ∧
+    (∀ φ : Sentence, φ.Holds ↔ φ.eval = true) ∧
+    (∀ φ : Sentence, φ.Holds ∨ φ.neg.Holds) ∧
+    (∀ φ : Sentence, ¬ (φ.Holds ∧ φ.neg.Holds)) :=
+  ⟨closedChain, Sentence.holds_iff_eval, Sentence.complete, Sentence.consistent⟩
+
+/-! Statements about real numbers, proved by computation. -/
+
+example : Sentence.Holds (.lt 2 5) := by decide
+example : Sentence.Holds (.neg (.gap 1)) := by decide
+example : Sentence.Holds (.conj (.saturates 0) (.gapFrom 2)) := by decide
+
+end Gnomon
