@@ -215,7 +215,7 @@ lake env lean Verification/Axioms.lean
 - [RS^N³ · Le cône d'incertitude](https://github.com/naype888-cloud/nrs3-uncertainty-cone)
 - [RS^N³ · Poincaré](https://github.com/naype888-cloud/nrs3-poincare)
 - [RS^N³ · Bekenstein — Bits on the Boundary](https://github.com/naype888-cloud/nrs3-bekenstein)
-- **[La chaîne close](https://github.com/naype888-cloud/Anti-Kurt-Godel-Theorem)** (ce dépôt)
+- **[La chaîne close](https://github.com/naype888-cloud/nrs3-completude)** (ce dépôt)
 
 ---
 
