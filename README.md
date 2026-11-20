@@ -23,7 +23,7 @@
 > et toujours sous la limite de Szegő `π²/3 − 3`, qu'aucun `d` n'atteint.
 >
 > <div align="center">
-> <img src="assets/plaque_bande.png" alt="La bande : C_M(d) entre C_M(4) et π²/3 − 3 pour d ≥ 4" width="860">
+> <picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_bande.png"><img src="assets/claro/plaque_bande.png" alt="La bande : C_M(d) entre C_M(4) et π²/3 − 3 pour d ≥ 4" width="860"></picture>
 > </div>
 >
 > 1. **L'incertitude est un plancher absolu** : `C_M(4) = (94 − 42√5)/5 > 0`, et `C_M(d) ≥ C_M(4)` pour tout `d ≥ 4`.
@@ -36,7 +36,7 @@
 > contient pas, et il est complet et décidable.
 
 <div align="center">
-<img src="assets/plaque_chaine_close.png" alt="La chaîne close : angle fondamental, saturation et plancher, bande, limite de Szegő" width="860">
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_chaine_close.png"><img src="assets/claro/plaque_chaine_close.png" alt="La chaîne close : angle fondamental, saturation et plancher, bande, limite de Szegő" width="860"></picture>
 </div>
 
 ---
@@ -75,7 +75,7 @@ il est complet (`complete`) et cohérent (`consistent`).
 > **Proposition 1.1.** `C_N(d)²` s'écrit en forme close en `θ_d = π/(d+1)`.
 
 <div align="center">
-<img src="assets/plaque_etape1_forme_close.png" alt="θ_d = π/(d+1) et la forme close de C_N(d)²" width="860">
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_etape1_forme_close.png"><img src="assets/claro/plaque_etape1_forme_close.png" alt="θ_d = π/(d+1) et la forme close de C_N(d)²" width="860"></picture>
 </div>
 
 *Modules formels :* [`Szego.lean`](src/AntiGodelCompleteness/Szego.lean) (`CoherenceConstantSq_closed_form`, `CoherenceConstantSq_sinc_form`).  
@@ -86,7 +86,7 @@ Définition directe ; la forme en `sinc` retire la singularité apparente.
 > **Proposition 2.1.** `C_M(2) = C_M(3) = 0`.
 
 <div align="center">
-<img src="assets/plaque_etape2_saturation.png" alt="C_N(2)² = C_N(3)² = 1 donc C_M(2) = C_M(3) = 0" width="860">
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_etape2_saturation.png"><img src="assets/claro/plaque_etape2_saturation.png" alt="C_N(2)² = C_N(3)² = 1 donc C_M(2) = C_M(3) = 0" width="860"></picture>
 </div>
 
 *Modules formels :* [`Szego.lean`](src/AntiGodelCompleteness/Szego.lean) (`CoherenceConstantSq_two`, `CoherenceConstantSq_three`) ;
@@ -98,7 +98,7 @@ Définition directe ; la forme en `sinc` retire la singularité apparente.
 > **Proposition 3.1.** `C_M(4) = (94 − 42√5)/5 ≈ 0,017029 > 0`.
 
 <div align="center">
-<img src="assets/plaque_etape3_plancher.png" alt="C_N(4)² = (99 − 42√5)/5 donc C_M(4) = (94 − 42√5)/5, strictement positif" width="860">
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_etape3_plancher.png"><img src="assets/claro/plaque_etape3_plancher.png" alt="C_N(4)² = (99 − 42√5)/5 donc C_M(4) = (94 − 42√5)/5, strictement positif" width="860"></picture>
 </div>
 
 *Modules formels :* [`Szego.lean`](src/AntiGodelCompleteness/Szego.lean) (`CoherenceConstantSq_four_eq`, `one_lt_CoherenceConstantSq_four`) ;
@@ -110,7 +110,7 @@ Définition directe ; la forme en `sinc` retire la singularité apparente.
 > **Proposition 4.1.** Pour tout `d ≥ 4`, `0 < C_M(4) ≤ C_M(d) < π²/3 − 3`.
 
 <div align="center">
-<img src="assets/plaque_etape4_bande.png" alt="Monotonie stricte de C_N² sur d ≥ 4, C_N(d) sous C_N^∞, et la bande" width="860">
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_etape4_bande.png"><img src="assets/claro/plaque_etape4_bande.png" alt="Monotonie stricte de C_N² sur d ≥ 4, C_N(d) sous C_N^∞, et la bande" width="860"></picture>
 </div>
 
 *Modules formels :* [`Monotonicity.lean`](src/AntiGodelCompleteness/Monotonicity.lean) (`CoherenceConstantSq_strictMonoOn_ge_four`, `CoherenceConstant_lt_CoherenceConstantInf`) ;
@@ -122,7 +122,7 @@ Signe de la dérivée par bornes de Taylor certifiées et `3 < π < 22/7`, sans 
 > **Proposition 5.1.** `C_M(d) → π²/3 − 3 = (C_N^∞)² − 1`, et `π²/3 − 3 > 0`.
 
 <div align="center">
-<img src="assets/plaque_etape5_limite.png" alt="π supérieur à 3 donne π²/3 − 3 positif ; C_M(d) tend vers π²/3 − 3" width="860">
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_etape5_limite.png"><img src="assets/claro/plaque_etape5_limite.png" alt="π supérieur à 3 donne π²/3 − 3 positif ; C_M(d) tend vers π²/3 − 3" width="860"></picture>
 </div>
 
 *Modules formels :* [`Szego.lean`](src/AntiGodelCompleteness/Szego.lean) (`tendsto_CoherenceConstantSq`) ;
@@ -135,7 +135,7 @@ Signe de la dérivée par bornes de Taylor certifiées et `3 < π < 22/7`, sans 
 > donc `φ` ou `¬φ` est vrai, jamais les deux, et la réponse se calcule.
 
 <div align="center">
-<img src="assets/plaque_systeme_formel.png" alt="Le système formel : atomes ramenés à des entiers, décidabilité, complétude et cohérence" width="860">
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_systeme_formel.png"><img src="assets/claro/plaque_systeme_formel.png" alt="Le système formel : atomes ramenés à des entiers, décidabilité, complétude et cohérence" width="860"></picture>
 </div>
 
 *Modules formels :* [`AntiGodelCompleteness.lean`](src/AntiGodelCompleteness.lean) (`holds_iff_eval`, `complete`, `consistent`, `closedSystem`).  
