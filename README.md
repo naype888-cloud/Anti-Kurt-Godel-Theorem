@@ -219,12 +219,16 @@ lake env lean Verification/Axioms.lean
 
 ---
 
-<div align="center">
-
-*Depuis Mathlib seul : π entre, π revient, et rien ne diverge entre les deux.*
-
-</div>
-
 ## Licence
 
 NRS Noncommercial License 1.0.0, voir [`LICENSE`](LICENSE).
+
+---
+
+<div align="center">
+
+### 📐 *« Dans ce cadre, les mathématiques sont circulaires et ne divergent pas : π entre par θ_d = π/(d+1) et revient comme limite π²/3 − 3. »*
+
+**Eduardo Nava Hernández · José Arturo Nava Hernández** · [naype888-cloud](https://github.com/naype888-cloud)
+
+</div>
