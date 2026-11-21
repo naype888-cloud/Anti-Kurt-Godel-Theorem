@@ -70,6 +70,10 @@ il est complet (`complete`) et cohérent (`consistent`).
 
 ## Les étapes
 
+<div align="center">
+<picture><source media="(prefers-color-scheme: dark)" srcset="assets/oscuro/plaque_completude_etapes.png"><img src="assets/claro/plaque_completude_etapes.png" alt="L'échelle déductive en six étapes : de l'angle fondamental à la complétude" width="860"></picture>
+</div>
+
 ### Étape 1 : l'angle fondamental et la forme close
 
 > **Proposition 1.1.** `C_N(d)²` s'écrit en forme close en `θ_d = π/(d+1)`.
